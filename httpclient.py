@@ -21,6 +21,7 @@
 import sys
 import socket
 import re
+import json
 # you may use urllib to encode data appropriately
 import urllib.parse
 
@@ -41,13 +42,13 @@ class HTTPClient(object):
         return None
 
     def get_code(self, data):
-        return None
+        return int(data.split(' ')[1])
 
     def get_headers(self,data):
         return None
 
     def get_body(self, data):
-        return None
+        return data.split('\r\n\r\n')[1]
     
     def sendall(self, data):
         self.socket.sendall(data.encode('utf-8'))
@@ -68,13 +69,47 @@ class HTTPClient(object):
         return buffer.decode('utf-8')
 
     def GET(self, url, args=None):
-        code = 500
-        body = ""
+        parse = urllib.parse.urlparse(url)
+        host = parse.hostname
+        port = parse.port
+        if port == None:
+            port = 80
+        self.connect(host, port)
+        data = '''GET {URL} HTTP/1.1
+Host: {HOST}
+
+'''
+        data = data.format(URL=url, HOST=host)
+        self.sendall(data)
+        response = self.recvall(self.socket)
+        self.socket.close()
+        print(repr(response))
+        code = self.get_code(response)
+        body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def POST(self, url, args=None):
-        code = 500
-        body = ""
+        parse = urllib.parse.urlparse(url)
+        host = parse.hostname
+        port = parse.port
+        self.connect(host, port)
+        data = '''POST {URL} HTTP/1.1
+Host: {HOST}
+Content-length: {LEN}
+Content-type: application/json\r\n\r\n{BODY}
+'''
+        if args != None:
+            body_json = json.dumps(args)
+            data = data.format(URL=url, HOST=host, BODY=body_json, LEN=94)
+        else:
+            data = data.format(URL=url, HOST=host, BODY=1, LEN=1)
+        print(data)
+        self.sendall(data)
+        response = self.recvall(self.socket)
+        self.socket.close()
+        #print(repr(response))
+        code = self.get_code(response)
+        body = self.get_body(response)
         return HTTPResponse(code, body)
 
     def command(self, url, command="GET", args=None):
@@ -86,6 +121,7 @@ class HTTPClient(object):
 if __name__ == "__main__":
     client = HTTPClient()
     command = "GET"
+    sys.argv = ['','GET', 'www.google.com:443']
     if (len(sys.argv) <= 1):
         help()
         sys.exit(1)
