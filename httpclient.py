@@ -76,6 +76,7 @@ class HTTPClient(object):
             port = 80
         self.connect(host, port)
         data = '''GET {URL} HTTP/1.1
+Connection: close
 Host: {HOST}
 
 '''
@@ -83,7 +84,7 @@ Host: {HOST}
         self.sendall(data)
         response = self.recvall(self.socket)
         self.socket.close()
-        print(repr(response))
+        print(response)
         code = self.get_code(response)
         body = self.get_body(response)
         return HTTPResponse(code, body)
@@ -92,15 +93,18 @@ Host: {HOST}
         parse = urllib.parse.urlparse(url)
         host = parse.hostname
         port = parse.port
+        if port == None:
+            port = 80
         self.connect(host, port)
         data = '''POST {URL} HTTP/1.1
+Connection: close
 Host: {HOST}
 Content-length: {LEN}
 Content-type: application/json\r\n\r\n{BODY}
 '''
         if args != None:
-            body_json = json.dumps(args)
-            data = data.format(URL=url, HOST=host, BODY=body_json, LEN=len(body_json))
+            body_args = urllib.parse.urlencode(args)
+            data = data.format(URL=url, HOST=host, BODY=body_args, LEN=len(body_args))
         else:
             data = data.format(URL=url, HOST=host, BODY=1, LEN=1)
         #print(data)
@@ -121,7 +125,6 @@ Content-type: application/json\r\n\r\n{BODY}
 if __name__ == "__main__":
     client = HTTPClient()
     command = "GET"
-    #sys.argv = ['','GET', 'http://yizhang.dx.am:80']
     if (len(sys.argv) <= 1):
         help()
         sys.exit(1)

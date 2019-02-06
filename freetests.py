@@ -210,7 +210,6 @@ class TestHTTPClient(unittest.TestCase):
     def testInternetGets(self):
         '''Test HTTP Get in the wild, these webservers are far less
            forgiving'''
-        return
         MyHTTPHandler.get = echo_path_get
         http = httpclass.HTTPClient()        
         urls = [
