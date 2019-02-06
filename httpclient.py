@@ -100,10 +100,10 @@ Content-type: application/json\r\n\r\n{BODY}
 '''
         if args != None:
             body_json = json.dumps(args)
-            data = data.format(URL=url, HOST=host, BODY=body_json, LEN=94)
+            data = data.format(URL=url, HOST=host, BODY=body_json, LEN=len(body_json))
         else:
             data = data.format(URL=url, HOST=host, BODY=1, LEN=1)
-        print(data)
+        #print(data)
         self.sendall(data)
         response = self.recvall(self.socket)
         self.socket.close()
@@ -121,7 +121,7 @@ Content-type: application/json\r\n\r\n{BODY}
 if __name__ == "__main__":
     client = HTTPClient()
     command = "GET"
-    sys.argv = ['','GET', 'www.google.com:443']
+    #sys.argv = ['','GET', 'http://yizhang.dx.am:80']
     if (len(sys.argv) <= 1):
         help()
         sys.exit(1)
